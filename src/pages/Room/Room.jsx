@@ -10,7 +10,7 @@ const Room = () => {
   const socket = useRef(null);
 
   useEffect(() => {
-    socket.current = io("http://localhost:5000");
+    socket.current = io("https://vcw-backend.vercel.app");
 
     return () => {
       socket.current.disconnect(); // Clean up the socket connection when the component unmounts
