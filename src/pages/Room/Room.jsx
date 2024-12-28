@@ -10,8 +10,9 @@ const Room = () => {
   const socket = useRef(null);
 
   useEffect(() => {
-    socket.current = io("https://vcw-backend.vercel.app", {
-      transports: ["websocket"]
+    socket.current = io("wss://vcw-backend.vercel.app", {
+      transports: ["websocket"],
+      withCredentials: true,
     });
 
     return () => {
