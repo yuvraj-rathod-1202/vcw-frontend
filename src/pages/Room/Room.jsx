@@ -11,7 +11,7 @@ const Room = () => {
 
   useEffect(() => {
     socket.current = io("https://vcw-backend.vercel.app", {
-      transports: ["websocket", "polling"]
+      transports: ["websocket"]
     });
 
     return () => {
