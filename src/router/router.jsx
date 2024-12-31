@@ -4,6 +4,7 @@ import Login from "../pages/login/Login";
 import Register from "../pages/login/Register";
 import Home from '../pages/Home/Home';
 import Room from "../pages/Room/Room";
+import JoinRoom from "../pages/Room/JoinRoom";
 
 const router = createBrowserRouter([
     {
@@ -31,8 +32,12 @@ const router = createBrowserRouter([
                 element: <Home />
             },
             {
-                path: "/room",
+                path: "/room/:id",
                 element: <Room />
+            },
+            {
+                path: '/joinroom',
+                element: <JoinRoom />
             }
         ]
     }

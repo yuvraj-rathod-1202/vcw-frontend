@@ -1,7 +1,9 @@
 import React, { useEffect, useRef } from "react";
+import { useParams } from "react-router-dom";
 import { io } from "socket.io-client";
 
 const Room = () => {
+  const roomId = useParams();
   const localStream = useRef(null);
   const remoteStream = useRef(null);
   const localVideoRef = useRef(null);
@@ -10,15 +12,26 @@ const Room = () => {
   const socket = useRef(null);
 
   useEffect(() => {
-    socket.current = io("wss://vcw-backend.vercel.app", {
+    if (!roomId) {
+      console.error("Room ID is missing!");
+      return;
+    }
+  
+    socket.current = io("http://localhost:5000", {
       transports: ["websocket"],
       withCredentials: true,
     });
-
+  
+    socket.current.emit("join-room", roomId);
+  
     return () => {
-      socket.current.disconnect(); // Clean up the socket connection when the component unmounts
+      socket.current.disconnect();
     };
-  }, []);
+  }, [roomId]);
+  
+
+ 
+
   const config = {
     iceServers: [
       {
@@ -47,7 +60,10 @@ const Room = () => {
 
     peerConnectionRef.current.onicecandidate = (event) => {
       if(event.candidate) {
-        socket.current.emit("candidate", event.candidate);
+        socket.current.emit("candidate", {
+          "candidate": event.candidate,
+          "roomId": roomId
+        });
       }
     }
 
@@ -72,7 +88,7 @@ const Room = () => {
     const offer = await peerConnectionRef.current.createOffer();
     await peerConnectionRef.current.setLocalDescription(offer);
 
-    socket.current.emit("offer", offer);
+    socket.current.emit("offer", {offer, roomId});
   }
 
   useEffect(() => {
@@ -84,7 +100,7 @@ const Room = () => {
       const answer = await peerConnectionRef.current.createAnswer();
       await peerConnectionRef.current.setLocalDescription(answer);
 
-      socket.current.emit("answer", answer);
+      socket.current.emit("answer", {answer, roomId});
     });
 
     socket.current.on("answer", async (answer) => {
