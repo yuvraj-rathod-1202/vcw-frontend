@@ -19,7 +19,7 @@ const CreateRoom = () => {
       return;
     }
 
-    socket.current = io("http://localhost:5000", {
+    socket.current = io("https://vcw-backend.vercel.app", {
       transports: ["websocket"],
       withCredentials: true,
     });
