@@ -13,7 +13,7 @@ const JoinRoom = () => {
   const navigate = useNavigate(); // Correct usage of `useNavigate`
 
   const onSubmit = (data) => {
-    navigate(`/room/${data.roomId}`); // Navigate to the room
+    navigate(`/createroom/${data.roomId}`); // Navigate to the room
     reset(); // Reset the form after navigation
   };
 

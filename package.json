@@ -5,6 +5,7 @@
   "dependencies": {
     "cra-template": "1.2.0",
     "firebase": "^11.1.0",
+    "firebase-admin": "^13.0.2",
     "peerjs": "^1.5.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

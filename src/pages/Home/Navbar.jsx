@@ -17,7 +17,7 @@ const Navbar = () => {
             <h1 className="text-2xl font-bold text-black">Video Call</h1>
         </div>
       <div className="h-20 grid grid-cols-4 items-center justify-center">
-        <Link to={`/room/${roomId}`}>
+        <Link to={`/createroom/${roomId}`}>
         <div className="bg-orange-500 h-14 w-14 rounded-md flex  justify-center m-auto items-center">
            <FaVideo className="text-white size-6"/>
         </div>
@@ -27,9 +27,11 @@ const Navbar = () => {
            <FiPlusCircle className="text-white size-6"/>
         </div>
         </Link>
+        <Link to={'/friends'}>
         <div className="bg-green-500 h-14 w-14 rounded-md flex justify-center mx-auto items-center">
            <FaUserFriends className="text-white size-6"/>
         </div>
+        </Link>
         <div className="bg-blue-500 h-14 w-14 rounded-md flex justify-center mx-auto items-center">
            4
         </div>

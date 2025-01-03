@@ -3,8 +3,10 @@ import App from "../App";
 import Login from "../pages/login/Login";
 import Register from "../pages/login/Register";
 import Home from '../pages/Home/Home';
-import Room from "../pages/Room/Room";
 import JoinRoom from "../pages/Room/JoinRoom";
+import Friends from "../pages/Friends/Friends";
+import CreateRoom from "../pages/Room/CreateRoom";
+
 
 const router = createBrowserRouter([
     {
@@ -32,12 +34,16 @@ const router = createBrowserRouter([
                 element: <Home />
             },
             {
-                path: "/room/:id",
-                element: <Room />
+                path: "/createroom/:id",
+                element: <CreateRoom />
             },
             {
                 path: '/joinroom',
                 element: <JoinRoom />
+            },
+            {
+                path: 'friends',
+                element: <Friends />
             }
         ]
     }
