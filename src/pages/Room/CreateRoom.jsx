@@ -3,12 +3,11 @@ import { useNavigate, useParams } from "react-router-dom";
 import { io } from "socket.io-client";
 
 const CreateRoom = () => {
-  const roomId = useParams();
+  const roomId = useParams().id;
   const localStream = useRef(null);
-  const remoteStream = useRef(null);
+  const remoteStreams = useRef({});
   const localVideoRef = useRef(null);
-  const remoteVideoRef = useRef(null);
-  const peerConnectionRef = useRef(null);
+  const peerConnections = useRef({});
   const socket = useRef(null);
 
   const navigate = useNavigate();
@@ -19,25 +18,101 @@ const CreateRoom = () => {
       return;
     }
 
-    socket.current = io("https://vcw-backend.vercel.app", {
-      transports: ["websocket"],
-      withCredentials: true,
-    });
+    const initialize = async () => {
+      try {
 
-    socket.current.emit("join-room", roomId);
+        await getLocalStream();
+
+
+        socket.current = io("http://localhost:5000", {
+          transports: ["websocket"],
+          withCredentials: true,
+        });
+
+        socket.current.emit("join-room", { id: roomId });
+
+
+        socket.current.on("user-joined", async (id) => {
+          console.log("User joined with ID:", id);
+          if (peerConnections.current[id]) {
+            console.warn(`Peer connection already exists for user: ${id}`);
+            return;
+          }
+
+          if(id !== socket.current.id) {
+            if (!localStream.current) {
+              console.error("Local stream is not ready!");
+              return;
+            }
+
+            createPeerConnection(id);
+
+            const offer = await peerConnections.current[id].createOffer();
+            await peerConnections.current[id].setLocalDescription(offer);
+
+            socket.current.emit("offer", { offer, to: id });
+            console.log("Sent offer to:", id);
+          }
+        });
+
+        socket.current.on("offer", async (data) => {
+          console.log("Received offer from:", data.from);
+          const { from, offer } = data;
+
+          if (!peerConnections.current[from]) {
+            createPeerConnection(from);
+          }
+
+          const pc = peerConnections.current[from];
+
+          if (pc.signalingState !== "stable") {
+            console.error("Cannot set remote offer in state:", pc.signalingState);
+            return;
+          }
+
+          await pc.setRemoteDescription(new RTCSessionDescription(offer));
+
+          const answer = await pc.createAnswer();
+          await pc.setLocalDescription(answer);
+
+          socket.current.emit("answer", { answer, to: from });
+          });
+
+
+        socket.current.on("answer", async (data) => {
+          const { from, answer } = data;
+          if (peerConnections.current[from].signalingState === "stable") {
+            console.error("Cannot set remote offer in state:", peerConnections.current[from].signalingState);
+            return;
+          }
+          await peerConnections.current[from].setRemoteDescription(
+            new RTCSessionDescription(answer)
+          );
+        });
+
+        socket.current.on("candidate", async (data) => {
+          const { from, candidate } = data;
+          try {
+            await peerConnections.current[from].addIceCandidate(
+              new RTCIceCandidate(candidate)
+            );
+          } catch (error) {
+            console.error("Error adding ICE candidate:", error);
+          }
+        });
+      } catch (error) {
+        console.error("Error during initialization:", error);
+      }
+    };
+
+    initialize();
 
     return () => {
-      socket.current.disconnect();
+      // Cleanup: Close all peer connections and disconnect the socket
+      Object.values(peerConnections.current).forEach((pc) => pc.close());
+      if (socket.current) socket.current.disconnect();
     };
   }, [roomId]);
-
-  const config = {
-    iceServers: [
-      {
-        urls: "stun:stun.l.google.com:19302", // STUN server to get public IP
-      },
-    ],
-  };
 
   const getLocalStream = async () => {
     try {
@@ -46,95 +121,66 @@ const CreateRoom = () => {
         audio: true,
       });
       localStream.current = stream;
-      console.log(localStream.current);
       localVideoRef.current.srcObject = stream;
+      console.log("Local stream initialized:", stream.getTracks());
     } catch (error) {
-      console.error("Error accessing media devices.", error);
+      console.error("Error accessing media devices:", error);
     }
   };
 
-  const createPeerConnection = () => {
-    peerConnectionRef.current = new RTCPeerConnection(config);
+  const createPeerConnection = (id) => {
+    const config = {
+      iceServers: [
+        {
+          urls: "stun:stun.l.google.com:19302",
+        },
+      ],
+    };
 
-    peerConnectionRef.current.onicecandidate = (event) => {
+    peerConnections.current[id] = new RTCPeerConnection(config);
+
+    peerConnections.current[id].onicecandidate = (event) => {
       if (event.candidate) {
         socket.current.emit("candidate", {
+          to: id,
           candidate: event.candidate,
-          roomId: roomId,
         });
       }
     };
 
-    peerConnectionRef.current.ontrack = (event) => {
-      if (!remoteStream.current) {
-        remoteStream.current = new MediaStream();
-        remoteVideoRef.current.srcObject = remoteStream.current;
+    peerConnections.current[id].ontrack = (event) => {
+      if (!remoteStreams.current[id]) {
+        console.log("Creating new remote stream for:", id);
+        remoteStreams.current[id] = new MediaStream();
       }
-      remoteStream.current.addTrack(event.track);
+      remoteStreams.current[id].addTrack(event.track);
+      updateRemoteVideos();
     };
 
-    localStream.current.getTracks().forEach((track) => {
-      peerConnectionRef.current.addTrack(track, localStream.current);
+    console.log("Adding local stream to peer connection:", id);
+    if (localStream.current) {
+      localStream.current.getTracks().forEach((track) => {
+        peerConnections.current[id].addTrack(track, localStream.current);
+      });
+    } else {
+      console.error("Local stream is not initialized yet!");
+    }
+  };
+
+  const updateRemoteVideos = () => {
+    const container = document.getElementById("remote-videos");
+    container.innerHTML = ""; // Clear existing videos
+    Object.entries(remoteStreams.current).forEach(([id, stream]) => {
+      const videoElement = document.createElement("video");
+      videoElement.srcObject = stream;
+      videoElement.autoplay = true;
+      videoElement.playsInline = true;
+      videoElement.style.width = "200px";
+      videoElement.style.margin = "5px";
+      container.appendChild(videoElement);
     });
   };
 
-  //start call
-
-  const startCall = async () => {
-    createPeerConnection();
-
-    const offer = await peerConnectionRef.current.createOffer();
-    await peerConnectionRef.current.setLocalDescription(offer);
-
-    socket.current.emit("offer", { offer, roomId });
-  };
-
-  useEffect(() => {
-    socket.current.on("offer", async (offer) => {
-      createPeerConnection();
-
-      await peerConnectionRef.current.setRemoteDescription(
-        new RTCSessionDescription(offer)
-      );
-
-      const answer = await peerConnectionRef.current.createAnswer();
-      await peerConnectionRef.current.setLocalDescription(answer);
-
-      socket.current.emit("answer", { answer, roomId });
-    });
-
-    socket.current.on("answer", async (answer) => {
-      await peerConnectionRef.current.setRemoteDescription(
-        new RTCSessionDescription(answer)
-      );
-    });
-
-    socket.current.on("candidate", async (candidate) => {
-      try {
-        await peerConnectionRef.current.addIceCandidate(
-          new RTCIceCandidate(candidate)
-        );
-      } catch (error) {
-        console.error("Error adding ICE candidate:", error);
-      }
-    });
-
-    socket.current.on("leave-room", () => {
-      if(remoteStream){
-        remoteStream.current.getTracks().forEach((track) => track.stop());
-        remoteStream.current = null;
-      }
-  
-      if(peerConnectionRef){
-        peerConnectionRef.current.close();
-        peerConnectionRef.current = null;
-      }
-    })
-  }, []);
-
-  useEffect(() => {
-    getLocalStream();
-  }, []);
 
   const startScreenShare = async () => {
     try {
@@ -146,15 +192,17 @@ const CreateRoom = () => {
         },
         audio: false,
       });
-  
+      const senderarrray = [];
       const screenTrack = screenStream.getVideoTracks()[0];
-      const sender = peerConnectionRef.current
-        .getSenders()
-        .find((s) => s.track.kind === "video");
+      Object.entries(peerConnections.current).forEach(([id, pc]) => {
+        const sender = pc.getSenders().find((s) => s.track.kind === "video");
   
       if (sender) {
+        senderarrray.push(sender);
         sender.replaceTrack(screenTrack);
       }
+      })
+      
   
       // Notify others
       socket.current.emit("screen-share-started", { roomId });
@@ -162,7 +210,7 @@ const CreateRoom = () => {
       // Revert when sharing stops
       screenTrack.onended = async () => {
         const localVideoTrack = localStream.current.getVideoTracks()[0];
-        if (sender) {
+        for(let sender of senderarrray) {
           sender.replaceTrack(localVideoTrack);
         }
         socket.current.emit("screen-share-stopped", { roomId });
@@ -172,77 +220,33 @@ const CreateRoom = () => {
     }
   };
 
-  const hangUpCall = () => {
-    
-    if(localStream.current){
-      localStream.current.getTracks().forEach(track => track.stop());
-      localStream.current = null;
-    }
-
-    if(remoteStream.current){
-      remoteStream.current.getTracks().forEach((track) => track.stop());
-      remoteStream.current = null;
-    }
-
-    if(peerConnectionRef.current){
-      peerConnectionRef.current.close();
-      peerConnectionRef.current = null;
-    }
-    socket.current.emit("leave-room");
-    window.location.reload();
-    navigate('/home');
-  }
-  
 
   return (
     <div className="relative h-screen w-screen overflow-hidden bg-black">
-      {/* Header */}
       <h1 className="absolute top-2 left-2 text-white text-xl z-10">
         Simple Video Call
       </h1>
 
       <div className="relative w-full h-full">
-        {/* Remote Video */}
-        <video
-          ref={remoteVideoRef}
-          className="absolute inset-0 w-full h-full object-contain"
-          autoPlay
-        ></video>
-
-        {/* Local Video */}
         <video
           ref={localVideoRef}
           className="absolute bottom-4 right-4 w-36 h-36 object-cover rounded-lg border-2 border-white bg-black"
           autoPlay
           muted
         ></video>
-      </div>
 
-      {/* Controls */}
-      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-10 flex gap-4">
-        <button
-          onClick={startCall}
-          className="bg-blue-500 text-white text-lg font-semibold rounded-lg hover:bg-blue-600"
-        >
-          Start Call
-        </button>
+        <div id="remote-videos" className="absolute inset-0 flex flex-wrap"></div>
+      </div>
+      <div>
         <button
           onClick={startScreenShare}
-          className="bg-green-500 text-white text-lg font-semibold rounded-lg hover:bg-green-600"
+          className="absolute bottom-4 left-4 bg-blue-500 text-white px-4 py-2 rounded-lg"
         >
-          Screen Share
-        </button>
-        <button
-          onClick={hangUpCall}
-          className="bg-red-500 text-white text-lg font-semibold rounded-lg hover:bg-red-600"
-        >
-          Hang Up
+          Share Screen
         </button>
       </div>
     </div>
   );
 };
-
-
 
 export default CreateRoom;
