@@ -17,7 +17,7 @@ const CreateRoom = () => {
 
   const getSocket = () => {
     if (!socketInstance) {
-      socketInstance = io("https://vcw-backend.vercel.app", {
+      socketInstance = io("https://vcw-backend.onrender.com", {
         transports: ["websocket"],
         withCredentials: true,
       });
