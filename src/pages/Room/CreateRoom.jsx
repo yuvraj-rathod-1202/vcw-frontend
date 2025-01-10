@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { io } from "socket.io-client";
 
@@ -9,8 +9,21 @@ const CreateRoom = () => {
   const localVideoRef = useRef(null);
   const peerConnections = useRef({});
   const socket = useRef(null);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const navigate = useNavigate();
+  let socketInstance = null;
+  let joinNotification = true;
+
+  const getSocket = () => {
+    if (!socketInstance) {
+      socketInstance = io("https://vcw-backend.vercel.app", {
+        transports: ["websocket"],
+        withCredentials: true,
+      });
+    }
+    return socketInstance;
+  };
 
   useEffect(() => {
     if (!roomId) {
@@ -20,18 +33,14 @@ const CreateRoom = () => {
 
     const initialize = async () => {
       try {
+        getLocalStream();
 
-        await getLocalStream();
+       socket.current = getSocket();
 
-
-        socket.current = io("http://localhost:5000", {
-          transports: ["websocket"],
-          withCredentials: true,
-        });
-
+       if(joinNotification){
+        joinNotification = false;
         socket.current.emit("join-room", { id: roomId });
-
-
+       }
         socket.current.on("user-joined", async (id) => {
           console.log("User joined with ID:", id);
           if (peerConnections.current[id]) {
@@ -39,7 +48,7 @@ const CreateRoom = () => {
             return;
           }
 
-          if(id !== socket.current.id) {
+          if (id !== socket.current.id) {
             if (!localStream.current) {
               console.error("Local stream is not ready!");
               return;
@@ -66,7 +75,10 @@ const CreateRoom = () => {
           const pc = peerConnections.current[from];
 
           if (pc.signalingState !== "stable") {
-            console.error("Cannot set remote offer in state:", pc.signalingState);
+            console.error(
+              "Cannot set remote offer in state:",
+              pc.signalingState
+            );
             return;
           }
 
@@ -76,21 +88,29 @@ const CreateRoom = () => {
           await pc.setLocalDescription(answer);
 
           socket.current.emit("answer", { answer, to: from });
-          });
-
+          console.log("Sent answer to:", from);
+        });
 
         socket.current.on("answer", async (data) => {
+          console.log("Received answer from:", data.from);
           const { from, answer } = data;
+          console.log(peerConnections.current[from].signalingState)
           if (peerConnections.current[from].signalingState === "stable") {
-            console.error("Cannot set remote offer in state:", peerConnections.current[from].signalingState);
+            console.error(
+              "Cannot set remote offer in state:",
+              peerConnections.current[from].signalingState
+            );
             return;
           }
+          console.log("answer", answer);
+          console.log(peerConnections.current[from].signalingState)
           await peerConnections.current[from].setRemoteDescription(
             new RTCSessionDescription(answer)
           );
         });
 
         socket.current.on("candidate", async (data) => {
+          console.log("Received ICE candidate from:", data.from);
           const { from, candidate } = data;
           try {
             await peerConnections.current[from].addIceCandidate(
@@ -108,9 +128,11 @@ const CreateRoom = () => {
     initialize();
 
     return () => {
-      // Cleanup: Close all peer connections and disconnect the socket
       Object.values(peerConnections.current).forEach((pc) => pc.close());
-      if (socket.current) socket.current.disconnect();
+      if (socket.current && socket.current.connected) {
+        socket.current.off();
+        socket.current.disconnect();
+      }
     };
   }, [roomId]);
 
@@ -170,6 +192,7 @@ const CreateRoom = () => {
   const updateRemoteVideos = () => {
     const container = document.getElementById("remote-videos");
     container.innerHTML = ""; // Clear existing videos
+
     Object.entries(remoteStreams.current).forEach(([id, stream]) => {
       const videoElement = document.createElement("video");
       videoElement.srcObject = stream;
@@ -180,7 +203,6 @@ const CreateRoom = () => {
       container.appendChild(videoElement);
     });
   };
-
 
   const startScreenShare = async () => {
     try {
@@ -196,21 +218,20 @@ const CreateRoom = () => {
       const screenTrack = screenStream.getVideoTracks()[0];
       Object.entries(peerConnections.current).forEach(([id, pc]) => {
         const sender = pc.getSenders().find((s) => s.track.kind === "video");
-  
-      if (sender) {
-        senderarrray.push(sender);
-        sender.replaceTrack(screenTrack);
-      }
-      })
-      
-  
+
+        if (sender) {
+          senderarrray.push(sender);
+          sender.replaceTrack(screenTrack);
+        }
+      });
+
       // Notify others
       socket.current.emit("screen-share-started", { roomId });
-  
+
       // Revert when sharing stops
       screenTrack.onended = async () => {
         const localVideoTrack = localStream.current.getVideoTracks()[0];
-        for(let sender of senderarrray) {
+        for (let sender of senderarrray) {
           sender.replaceTrack(localVideoTrack);
         }
         socket.current.emit("screen-share-stopped", { roomId });
@@ -220,6 +241,18 @@ const CreateRoom = () => {
     }
   };
 
+  const toggleDropdown = () => {
+    setIsDropdownOpen((prev) => !prev);
+  };
+
+  const hangUp = () => {
+    Object.values(peerConnections.current).forEach((pc) => pc.close());
+    if (localStream.current) {
+      localStream.current.getTracks().forEach((track) => track.stop());
+    }
+    navigate("/"); // Redirect user to another page
+  };
+  
 
   return (
     <div className="relative h-screen w-screen overflow-hidden bg-black">
@@ -230,20 +263,60 @@ const CreateRoom = () => {
       <div className="relative w-full h-full">
         <video
           ref={localVideoRef}
-          className="absolute bottom-4 right-4 w-36 h-36 object-cover rounded-lg border-2 border-white bg-black"
+          className="absolute bottom-14 right-4 w-36 h-36 object-cover rounded-lg border-2 border-white bg-black"
           autoPlay
           muted
         ></video>
 
-        <div id="remote-videos" className="absolute inset-0 flex flex-wrap"></div>
+        <div
+          id="remote-videos"
+          className="absolute inset-0 flex flex-wrap"
+        ></div>
       </div>
-      <div>
-        <button
-          onClick={startScreenShare}
-          className="absolute bottom-4 left-4 bg-blue-500 text-white px-4 py-2 rounded-lg"
-        >
-          Share Screen
-        </button>
+
+      <button
+        id="dropdownDefaultButton"
+        onClick={toggleDropdown}
+        aria-expanded={isDropdownOpen}
+        className="absolute bottom-6 left-4 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+        type="button"
+      >
+        Dropdown button
+      </button>
+
+      <div
+        id="dropdown"
+        className={`absolute bottom-28 left-4 z-10 ${
+          isDropdownOpen ? "block" : "hidden"
+        } bg-white divide-y divide-gray-100 rounded-lg shadow w-44 dark:bg-gray-700`}
+      >
+        <ul className="py-2 text-sm text-gray-700 dark:text-gray-200">
+          <li>
+            <a
+              onClick={startScreenShare}
+              className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
+            >
+              Screen Share
+            </a>
+          </li>
+          <li>
+            <a
+    
+              className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
+            >
+              Chat
+            </a>
+          </li>
+          <li>
+            <a
+              onClick={hangUp}
+              className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
+            >
+              Hang Up
+            </a>
+          </li>
+          
+        </ul>
       </div>
     </div>
   );
