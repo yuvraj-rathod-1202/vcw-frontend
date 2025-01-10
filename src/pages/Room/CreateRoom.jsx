@@ -257,7 +257,7 @@ const CreateRoom = () => {
   return (
     <div className="relative h-screen w-screen overflow-hidden bg-black">
       <h1 className="absolute top-2 left-2 text-white text-xl z-10">
-        Simple Video Call
+        Simple Video Call {roomId}
       </h1>
 
       <div className="relative w-full h-full">
