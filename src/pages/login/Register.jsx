@@ -21,7 +21,7 @@ const Register = () => {
         try {
             await registerUser(data.email, data.password);
             alert("User registered successfully!");
-            navigate('/home')
+            navigate('/')
         } catch (error) {
             setMessage("An error occurred during registration.");
             console.error(error);
@@ -32,7 +32,7 @@ const Register = () => {
         try {
             await signInWithGoogle();
             alert("User logged in successfully!");
-            navigate('/home');
+            navigate('/');
         } catch (error) {
             setMessage("An error occurred during registration.");
             console.error(error);
