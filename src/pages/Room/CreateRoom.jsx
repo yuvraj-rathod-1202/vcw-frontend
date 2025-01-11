@@ -254,43 +254,60 @@ const CreateRoom = () => {
     navigate("/"); // Redirect user to another page
   };
   
-  const changeCamerainMobile = async () => {
-    try {
-      const screenStream = await navigator.mediaDevices.getDisplayMedia({
-        video: {
-          width: { ideal: 1920 },
-          height: { ideal: 1080 },
-          frameRate: { ideal: 30 },
-          facingMode: { exact: "environment" },
-        },
-        audio: false,
-      });
-      const senderarrray = [];
-      const screenTrack = screenStream.getVideoTracks()[0];
-      Object.entries(peerConnections.current).forEach(([id, pc]) => {
-        const sender = pc.getSenders().find((s) => s.track.kind === "video");
+  let usingFrontCamera = true; // Tracks the current camera state
 
-        if (sender) {
-          senderarrray.push(sender);
-          sender.replaceTrack(screenTrack);
-        }
-      });
+const changeCamerainMobile = async () => {
+  try {
+    // Determine the next camera to use
+    const facingMode = usingFrontCamera ? "environment" : "user";
 
-      // Notify others
-      socket.current.emit("camera-changed-start", { roomId });
+    // Get the new camera stream
+    const newStream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        width: { ideal: 1920 },
+        height: { ideal: 1080 },
+        frameRate: { ideal: 30 },
+        facingMode: { ideal: facingMode }, // Toggle between front and back
+      },
+      audio: true,
+    });
 
-      // Revert when sharing stops
-      screenTrack.onended = async () => {
-        const localVideoTrack = localStream.current.getVideoTracks()[0];
-        for (let sender of senderarrray) {
-          sender.replaceTrack(localVideoTrack);
-        }
-        socket.current.emit("camera-changed-stop", { roomId });
-      };
-    } catch (error) {
-      console.error("Error starting screen sharing:", error);
-    }
+    const senderArray = [];
+    const newTrack = newStream.getVideoTracks()[0];
+
+    // Replace tracks for all peer connections
+    Object.entries(peerConnections.current).forEach(([id, pc]) => {
+      const sender = pc.getSenders().find((s) => s.track.kind === "video");
+      if (sender) {
+        senderArray.push(sender);
+        sender.replaceTrack(newTrack);
+      }
+    });
+
+    // Update the local stream
+    localStream.current = newStream;
+
+    usingFrontCamera = !usingFrontCamera;
+
+    // Notify others about the camera change
+    socket.current.emit("camera-changed-start", { roomId });
+
+    // Handle track stop (e.g., user turns off camera or stream ends)
+    newTrack.onended = async () => {
+      const localVideoTrack = localStream.current.getVideoTracks()[0];
+      for (let sender of senderArray) {
+        sender.replaceTrack(localVideoTrack);
+      }
+      socket.current.emit("camera-changed-stop", { roomId });
+    };
+
+    // Toggle the camera state
+    usingFrontCamera = !usingFrontCamera;
+  } catch (error) {
+    console.error("Error switching camera:", error);
   }
+};
+
 
   return (
     <div className="relative h-screen w-screen overflow-hidden bg-black">
