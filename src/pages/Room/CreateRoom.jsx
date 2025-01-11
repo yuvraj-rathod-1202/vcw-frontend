@@ -3,6 +3,15 @@ import { useNavigate, useParams } from "react-router-dom";
 import { io } from "socket.io-client";
 import { FiRefreshCw } from "react-icons/fi";
 
+//swiper
+import { Swiper, SwiperSlide } from "swiper/react";
+
+// Import Swiper styles
+import "swiper/css";
+import "swiper/css/pagination";
+
+import { Pagination } from "swiper/modules";
+
 const CreateRoom = () => {
   const roomId = useParams().id;
   const localStream = useRef(null);
@@ -36,12 +45,12 @@ const CreateRoom = () => {
       try {
         getLocalStream();
 
-       socket.current = getSocket();
+        socket.current = getSocket();
 
-       if(joinNotification){
-        joinNotification = false;
-        socket.current.emit("join-room", { id: roomId });
-       }
+        if (joinNotification) {
+          joinNotification = false;
+          socket.current.emit("join-room", { id: roomId });
+        }
         socket.current.on("user-joined", async (id) => {
           console.log("User joined with ID:", id);
           if (peerConnections.current[id]) {
@@ -95,7 +104,7 @@ const CreateRoom = () => {
         socket.current.on("answer", async (data) => {
           console.log("Received answer from:", data.from);
           const { from, answer } = data;
-          console.log(peerConnections.current[from].signalingState)
+          console.log(peerConnections.current[from].signalingState);
           if (peerConnections.current[from].signalingState === "stable") {
             console.error(
               "Cannot set remote offer in state:",
@@ -104,7 +113,7 @@ const CreateRoom = () => {
             return;
           }
           console.log("answer", answer);
-          console.log(peerConnections.current[from].signalingState)
+          console.log(peerConnections.current[from].signalingState);
           await peerConnections.current[from].setRemoteDescription(
             new RTCSessionDescription(answer)
           );
@@ -251,153 +260,197 @@ const CreateRoom = () => {
     }
     navigate("/"); // Redirect user to another page
   };
-  
+
   let usingFrontCamera = true; // Tracks the current camera state
 
-const changeCamerainMobile = async () => {
-  try {
-    // Determine the next camera to use
-    
-    let newStream;
-    // Get the new camera stream
-    if(usingFrontCamera){
-      newStream = await navigator.mediaDevices.getUserMedia({
-      video: {
-        width: { ideal: 1920 },
-        height: { ideal: 1080 },
-        frameRate: { ideal: 30 },
-        facingMode: { ideal: "envitonment" }, // Correctly set facingMode
-      },
-      audio: true,
-    });
-  }else{
-    newStream = await navigator.mediaDevices.getUserMedia({
-      video: {
-        width: { ideal: 1920 },
-        height: { ideal: 1080 },
-        frameRate: { ideal: 30 }, // Correctly set facingMode
-      },
-      audio: true,
-    });
-  }
+  const changeCamerainMobile = async () => {
+    try {
+      // Determine the next camera to use
 
-    const senderArray = [];
-    const newTrack = newStream.getVideoTracks()[0];
-
-    // Replace tracks for all peer connections
-    Object.entries(peerConnections.current).forEach(([id, pc]) => {
-      const sender = pc.getSenders().find((s) => s.track.kind === "video");
-      if (sender) {
-        senderArray.push(sender);
-        sender.replaceTrack(newTrack);
+      let newStream;
+      // Get the new camera stream
+      if (usingFrontCamera) {
+        newStream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            width: { ideal: 1920 },
+            height: { ideal: 1080 },
+            frameRate: { ideal: 30 },
+            facingMode: { ideal: "envitonment" }, // Correctly set facingMode
+          },
+          audio: true,
+        });
+      } else {
+        newStream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            width: { ideal: 1920 },
+            height: { ideal: 1080 },
+            frameRate: { ideal: 30 }, // Correctly set facingMode
+          },
+          audio: true,
+        });
       }
-    });
 
-    // Update the local video preview element
-    if (localVideoRef) {
-      localVideoRef.srcObject = newStream; // Update the local video element with the new stream
+      const senderArray = [];
+      const newTrack = newStream.getVideoTracks()[0];
+
+      // Replace tracks for all peer connections
+      Object.entries(peerConnections.current).forEach(([id, pc]) => {
+        const sender = pc.getSenders().find((s) => s.track.kind === "video");
+        if (sender) {
+          senderArray.push(sender);
+          sender.replaceTrack(newTrack);
+        }
+      });
+
+      // Update the local video preview element
+      if (localVideoRef) {
+        localVideoRef.srcObject = newStream; // Update the local video element with the new stream
+      }
+
+      // Update the local stream
+      localStream.current = newStream;
+
+      // Notify others about the camera change
+      socket.current.emit("camera-changed-start", { roomId });
+
+      // Handle track stop (e.g., user turns off camera or stream ends)
+      newTrack.onended = async () => {
+        const localVideoTrack = localStream.current.getVideoTracks()[0];
+        for (let sender of senderArray) {
+          sender.replaceTrack(localVideoTrack);
+        }
+        socket.current.emit("camera-changed-stop", { roomId });
+      };
+
+      // Toggle the camera state
+      usingFrontCamera = !usingFrontCamera;
+    } catch (error) {
+      console.error("Error switching camera:", error);
     }
+  };
 
-    // Update the local stream
-    localStream.current = newStream;
+  const sendMessageToRoom = () => {
+    const message = document.getElementById("message").value;
+    socket.current.emit("sentmessagetoroom", { roomId, message });
+    const chatContainer = document.getElementById("chat-container");
+    const messageElement = document.createElement("div");
+    messageElement.classList.add("p-2", "rounded-md", "bg-blue-300", "mb-2", "ml-auto", "max-w-sm", "px-1", "text-right");
+    messageElement.innerHTML = `<div><span class="font-semibold text-gray-800">you:</span><strong> ${message} </strong></div>`;
+    chatContainer.appendChild(messageElement);
+    document.getElementById("message").value = "";
+  };
 
-    // Notify others about the camera change
-    socket.current.emit("camera-changed-start", { roomId });
-
-    // Handle track stop (e.g., user turns off camera or stream ends)
-    newTrack.onended = async () => {
-      const localVideoTrack = localStream.current.getVideoTracks()[0];
-      for (let sender of senderArray) {
-        sender.replaceTrack(localVideoTrack);
-      }
-      socket.current.emit("camera-changed-stop", { roomId });
-    };
-
-    // Toggle the camera state
-    usingFrontCamera = !usingFrontCamera;
-  } catch (error) {
-    console.error("Error switching camera:", error);
-  }
-};
-
-
+  useEffect(() => {
+    socket.current.on("getmessagefromroom", (data) => {
+      const { from, message } = data;
+      const chatContainer = document.getElementById("chat-container");
+      const messageElement = document.createElement("div");
+      messageElement.classList.add("p-2", "rounded-md", "bg-gray-300", "mb-2", "mr-auto", "max-w-sm", "px-1", "text-left");
+      messageElement.innerHTML = `<div><span class="font-semibold text-right bg-white text-gray-800">${from}:</span><strong> ${message} </strong></div>`;
+      chatContainer.appendChild(messageElement);
+    })
+  })
 
   return (
-    <div className="relative h-screen w-screen overflow-hidden bg-black">
-      
-      <h1 className="absolute top-2 left-2 text-white text-xl z-10">
-        Simple Video Call {roomId}
-      </h1>
-      
-      
+    <div>
+      <Swiper pagination={true} modules={[Pagination]} className="mySwiper">
+        <SwiperSlide>
+          <div className="relative h-screen w-screen overflow-hidden bg-black">
+            <h1 className="absolute top-2 left-2 text-white text-xl z-10">
+              Simple Video Call {roomId}
+            </h1>
 
-      <div className="relative w-full h-full">
-        <video
-          ref={localVideoRef}
-          className="absolute bottom-14 right-4 w-36 h-36 object-cover rounded-lg border-2 border-white bg-black"
-          autoPlay
-          muted
-        ></video>
+            <div className="relative w-full h-full">
+              <video
+                ref={localVideoRef}
+                className="absolute bottom-14 right-4 w-36 h-36 object-cover rounded-lg border-2 border-white bg-black"
+                autoPlay
+                muted
+              ></video>
 
-        <div
-          id="remote-videos"
-          className="absolute inset-0 flex-wrap grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4 overflow-auto"
-        ></div>
-      </div>
+              <div
+                id="remote-videos"
+                className="absolute inset-0 flex-wrap grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4 overflow-auto"
+              ></div>
+            </div>
 
-      <div className="flex">
-      <button
-        id="dropdownDefaultButton"
-        onClick={toggleDropdown}
-        aria-expanded={isDropdownOpen}
-        className="absolute bottom-6 left-4 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
-        type="button"
-      >
-        Dropdown button
-      </button>
+            <div className="flex">
+              <button
+                id="dropdownDefaultButton"
+                onClick={toggleDropdown}
+                aria-expanded={isDropdownOpen}
+                className="absolute bottom-6 left-4 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+                type="button"
+              >
+                Dropdown button
+              </button>
 
-      <button
-          onClick={changeCamerainMobile}
-          className="sm:hidden text-white ml-4 bg-blue-300 hover:bg-blue-400"
-        >
-          <FiRefreshCw />aadsafsdfsf
-      </button>
-      </div>
+              <button
+                onClick={changeCamerainMobile}
+                className="sm:hidden text-white ml-4 bg-blue-300 hover:bg-blue-400"
+              >
+                <FiRefreshCw />
+                aadsafsdfsf
+              </button>
+            </div>
 
-      <div
-        id="dropdown"
-        className={`absolute bottom-28 left-4 z-10 ${
-          isDropdownOpen ? "block" : "hidden"
-        } bg-white divide-y divide-gray-100 rounded-lg shadow w-44 dark:bg-gray-700`}
-      >
-        <ul className="py-2 text-sm text-gray-700 dark:text-gray-200">
-          <li>
-            <a
-              onClick={startScreenShare}
-              className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
+            <div
+              id="dropdown"
+              className={`absolute bottom-28 left-4 z-10 ${
+                isDropdownOpen ? "block" : "hidden"
+              } bg-white divide-y divide-gray-100 rounded-lg shadow w-44 dark:bg-gray-700`}
             >
-              Screen Share
-            </a>
-          </li>
-          <li>
-            <a
-    
-              className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
-            >
-              Chat
-            </a>
-          </li>
-          <li>
-            <a
-              onClick={hangUp}
-              className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
-            >
-              Hang Up
-            </a>
-          </li>
-          
-        </ul>
-      </div>
+              <ul className="py-2 text-sm text-gray-700 dark:text-gray-200">
+                <li>
+                  <a
+                    onClick={startScreenShare}
+                    className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
+                  >
+                    Screen Share
+                  </a>
+                </li>
+                <li>
+                  <a className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
+                    Chat
+                  </a>
+                </li>
+                <li>
+                  <a
+                    onClick={hangUp}
+                    className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
+                  >
+                    Hang Up
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </SwiperSlide>
+        <SwiperSlide>
+          <div>
+            <h1 className="text-xl mb-1 text-center font-medium text-black bg-gray-300">
+              Chat with Room
+            </h1>
+            <hr />
+            <div className="flex flex-col mb-1 h-[calc(100vh-110px)]" id="chat-container"></div>
+            <hr />
+            <div className="flex flex-row items-center p-4 justify-center space-x-4 bg-neutral-100">
+              <input
+                type="text"
+                id="message"
+                className="p-2 border rounded-md focus:outline-none focus:ring focus:border-blue-300"
+                placeholder="Type a message"
+              />
+              <button
+                onClick={sendMessageToRoom}
+                className="py-2 px-4 bg-blue-500 text-white font-bold rounded-md"
+              >
+                Send
+              </button>
+            </div>
+          </div>
+        </SwiperSlide>
+      </Swiper>
     </div>
   );
 };
