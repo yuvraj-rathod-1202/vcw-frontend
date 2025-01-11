@@ -349,14 +349,14 @@ const CreateRoom = () => {
       messageElement.innerHTML = `<div><span class="font-semibold text-right bg-white text-gray-800">${from}:</span><strong> ${message} </strong></div>`;
       chatContainer.appendChild(messageElement);
     })
-  })
+  }, []);
 
   return (
     <div>
       <Swiper pagination={true} modules={[Pagination]} className="mySwiper">
         <SwiperSlide>
           <div className="relative h-screen w-screen overflow-hidden bg-black">
-            <h1 className="absolute top-2 left-2 text-white text-xl z-10">
+            <h1 className="absolute mb-3 top-2 left-2 text-white text-xl z-10">
               Simple Video Call {roomId}
             </h1>
 
