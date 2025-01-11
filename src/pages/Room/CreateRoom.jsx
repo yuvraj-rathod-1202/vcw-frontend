@@ -259,18 +259,29 @@ const CreateRoom = () => {
 const changeCamerainMobile = async () => {
   try {
     // Determine the next camera to use
-    const facingMode = usingFrontCamera ? "environment" : "user"; // Toggle between back and front
-
+    
+    let newStream;
     // Get the new camera stream
-    const newStream = await navigator.mediaDevices.getUserMedia({
+    if(usingFrontCamera){
+      newStream = await navigator.mediaDevices.getUserMedia({
       video: {
         width: { ideal: 1920 },
         height: { ideal: 1080 },
         frameRate: { ideal: 30 },
-        facingMode: { ideal: facingMode }, // Correctly set facingMode
+        facingMode: { ideal: "envitonment" }, // Correctly set facingMode
       },
       audio: true,
     });
+  }else{
+    newStream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        width: { ideal: 1920 },
+        height: { ideal: 1080 },
+        frameRate: { ideal: 30 }, // Correctly set facingMode
+      },
+      audio: true,
+    });
+  }
 
     const senderArray = [];
     const newTrack = newStream.getVideoTracks()[0];
@@ -315,19 +326,12 @@ const changeCamerainMobile = async () => {
 
   return (
     <div className="relative h-screen w-screen overflow-hidden bg-black">
-      <div className="flex justify-between">
+      
       <h1 className="absolute top-2 left-2 text-white text-xl z-10">
         Simple Video Call {roomId}
       </h1>
-      <div className="mr-auto ml-2">
-        <button
-          onClick={changeCamerainMobile}
-          className="sm:hidden text-white bg-gray-300 hover:bg-gray-400 focus:ring-4 focus:outline-none focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-800"
-        >
-          <FiRefreshCw />
-        </button>
-      </div>
-      </div>
+      
+      
 
       <div className="relative w-full h-full">
         <video
@@ -351,6 +355,13 @@ const changeCamerainMobile = async () => {
         type="button"
       >
         Dropdown button
+      </button>
+
+      <button
+          onClick={changeCamerainMobile}
+          className="sm:hidden text-white mr-4 bg-gray-300 hover:bg-gray-400 focus:ring-4 focus:outline-none focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-800"
+        >
+          <FiRefreshCw />
       </button>
 
       <div
