@@ -259,31 +259,18 @@ const CreateRoom = () => {
 const changeCamerainMobile = async () => {
   try {
     // Determine the next camera to use
-    // const facingMode = usingFrontCamera ? "environment" : "user";
+    const facingMode = usingFrontCamera ? "environment" : "user"; // Toggle between back and front
 
     // Get the new camera stream
-    let newStream;
-    if(usingFrontCamera){
-     newStream = await navigator.mediaDevices.getUserMedia({
+    const newStream = await navigator.mediaDevices.getUserMedia({
       video: {
         width: { ideal: 1920 },
         height: { ideal: 1080 },
         frameRate: { ideal: 30 },
-        facingMode: { exact: facingMode }, // Toggle between front and back
+        facingMode: { ideal: facingMode }, // Correctly set facingMode
       },
       audio: true,
     });
-  }else{
-     newStream = await navigator.mediaDevices.getUserMedia({
-      video: {
-        width: { ideal: 1920 },
-        height: { ideal: 1080 },
-        frameRate: { ideal: 30 },
-        facingMode: { facingMode: "user" }, // Toggle between front and back
-      },
-      audio: true,
-    });
-  }
 
     const senderArray = [];
     const newTrack = newStream.getVideoTracks()[0];
@@ -297,10 +284,13 @@ const changeCamerainMobile = async () => {
       }
     });
 
+    // Update the local video preview element
+    if (localVideoRef) {
+      localVideoRef.srcObject = newStream; // Update the local video element with the new stream
+    }
+
     // Update the local stream
     localStream.current = newStream;
-
-    usingFrontCamera = !usingFrontCamera;
 
     // Notify others about the camera change
     socket.current.emit("camera-changed-start", { roomId });
@@ -320,6 +310,7 @@ const changeCamerainMobile = async () => {
     console.error("Error switching camera:", error);
   }
 };
+
 
 
   return (
