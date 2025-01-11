@@ -199,8 +199,6 @@ const CreateRoom = () => {
       videoElement.srcObject = stream;
       videoElement.autoplay = true;
       videoElement.playsInline = true;
-      videoElement.style.width = "200px";
-      videoElement.style.margin = "5px";
       container.appendChild(videoElement);
     });
   };
@@ -343,10 +341,11 @@ const changeCamerainMobile = async () => {
 
         <div
           id="remote-videos"
-          className="absolute inset-0 flex flex-wrap"
+          className="absolute inset-0 flex-wrap grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4 overflow-auto"
         ></div>
       </div>
 
+      <div className="flex">
       <button
         id="dropdownDefaultButton"
         onClick={toggleDropdown}
@@ -359,10 +358,11 @@ const changeCamerainMobile = async () => {
 
       <button
           onClick={changeCamerainMobile}
-          className="sm:hidden text-white mr-4 bg-gray-300 hover:bg-gray-400 focus:ring-4 focus:outline-none focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-800"
+          className="sm:hidden text-white ml-4 bg-blue-300 hover:bg-blue-400"
         >
-          <FiRefreshCw />
+          <FiRefreshCw />aadsafsdfsf
       </button>
+      </div>
 
       <div
         id="dropdown"
