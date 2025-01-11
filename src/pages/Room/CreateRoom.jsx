@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { use, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { io } from "socket.io-client";
 import { FiRefreshCw } from "react-icons/fi";
@@ -258,6 +258,7 @@ const CreateRoom = () => {
     if (localStream.current) {
       localStream.current.getTracks().forEach((track) => track.stop());
     }
+    socket.current.emit("leave-room", { roomId, userId: socket.current.id });
     navigate("/"); // Redirect user to another page
   };
 
@@ -348,6 +349,18 @@ const CreateRoom = () => {
       messageElement.classList.add("p-2", "rounded-md", "bg-gray-300", "mb-2", "mr-auto", "max-w-sm", "px-1", "text-left");
       messageElement.innerHTML = `<div><span class="font-semibold text-right bg-white text-gray-800">${from}:</span><strong> ${message} </strong></div>`;
       chatContainer.appendChild(messageElement);
+    });
+
+    socket.current.on("user-left", (id) => {
+      console.log("User left:", id);
+      if (peerConnections.current[id]) {
+        peerConnections.current[id].close();
+        delete peerConnections.current[id];
+      }
+      if (remoteStreams.current[id]) {
+        delete remoteStreams.current[id];
+        updateRemoteVideos();
+      }
     })
   }, []);
 
