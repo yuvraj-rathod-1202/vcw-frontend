@@ -357,7 +357,7 @@ const CreateRoom = () => {
         <SwiperSlide>
           <div className="relative h-screen w-screen overflow-hidden bg-black">
             <h1 className="absolute mb-3 top-2 left-2 text-white text-xl z-10">
-              Simple Video Call {roomId}
+              Simple Video Call <span className="font-semibold text-purple-500"> {roomId}</span>
             </h1>
 
             <div className="relative w-full h-full">
@@ -370,7 +370,7 @@ const CreateRoom = () => {
 
               <div
                 id="remote-videos"
-                className="absolute inset-0 flex-wrap grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4 overflow-auto"
+                className="absolute inset-0 flex-wrap grid grid-cols-1 mt-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4 overflow-auto"
               ></div>
             </div>
 
@@ -390,7 +390,6 @@ const CreateRoom = () => {
                 className="sm:hidden text-white ml-4 bg-blue-300 hover:bg-blue-400"
               >
                 <FiRefreshCw />
-                aadsafsdfsf
               </button>
             </div>
 
