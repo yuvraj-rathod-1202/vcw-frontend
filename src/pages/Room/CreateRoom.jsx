@@ -431,7 +431,7 @@ const CreateRoom = () => {
               Chat with Room
             </h1>
             <hr />
-            <div className="flex flex-col mb-1 h-[calc(100vh-110px)]" id="chat-container"></div>
+            <div className="flex flex-col mb-1 h-[calc(100vh-110px)] overflow-y-auto" id="chat-container"></div>
             <hr />
             <div className="flex flex-row items-center p-4 justify-center space-x-4 bg-neutral-100">
               <input
