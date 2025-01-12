@@ -10,7 +10,7 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import "swiper/css/pagination";
 
-import { Pagination } from "swiper/modules";
+import { Pagination, Navigation } from "swiper/modules";
 
 const CreateRoom = () => {
   const roomId = useParams().id;
@@ -364,9 +364,16 @@ const CreateRoom = () => {
     })
   }, []);
 
+  const swiperRef = useRef(null);
+  const goToChat = () => {
+    if(swiperRef.current){
+      swiperRef.current.slideTo(1);
+    }
+  }
+
   return (
     <div>
-      <Swiper pagination={true} modules={[Pagination]} className="mySwiper">
+      <Swiper onSwiper={(swiper) => (swiperRef.current = swiper)} pagination={true} modules={[Pagination, Navigation]} className="mySwiper">
         <SwiperSlide>
           <div className="relative h-screen w-screen overflow-hidden bg-black">
             <h1 className="absolute mb-3 top-2 left-2 text-white text-xl z-10">
@@ -383,7 +390,7 @@ const CreateRoom = () => {
 
               <div
                 id="remote-videos"
-                className="absolute inset-0 flex-wrap grid grid-cols-1 mt-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4 overflow-auto"
+                className="absolute inset-0 flex-wrap grid grid-cols-1 mt-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4 overflow-auto overflow-y-auto"
               ></div>
             </div>
 
@@ -416,13 +423,13 @@ const CreateRoom = () => {
                 <li>
                   <a
                     onClick={startScreenShare}
-                    className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
+                    className="hidden md:block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
                   >
                     Screen Share
                   </a>
                 </li>
                 <li>
-                  <a className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
+                  <a onClick={goToChat} className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
                     Chat
                   </a>
                 </li>
