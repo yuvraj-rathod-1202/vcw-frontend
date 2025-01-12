@@ -45,7 +45,7 @@ const CreateRoom = () => {
       try {
         await getLocalStream();
 
-        socket.current = await getSocket();
+        socket.current =  getSocket();
 
         if (joinNotification) {
           joinNotification = false;
@@ -195,7 +195,18 @@ const CreateRoom = () => {
         peerConnections.current[id].addTrack(track, localStream.current);
       });
     } else {
+      async function wait() {
+        await getLocalStream();
+      }
+      wait();
+      if (localStream.current) {
+        localStream.current.getTracks().forEach((track) => {
+          peerConnections.current[id].addTrack(track, localStream.current);
+        });
+      }else{
       console.error("Local stream is not initialized yet!");
+        }
+
     }
   };
 
@@ -375,6 +386,7 @@ const CreateRoom = () => {
   };
 
   useEffect(() => {
+    if(socket.current){
     socket.current.on("getmessagefromroom", (data) => {
       const { from, message } = data;
       const chatContainer = document.getElementById("chat-container");
@@ -404,6 +416,7 @@ const CreateRoom = () => {
         updateRemoteVideos();
       }
     });
+  }
   }, []);
 
   const swiperRef = useRef(null);
