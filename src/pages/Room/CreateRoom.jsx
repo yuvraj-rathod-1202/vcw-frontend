@@ -1,7 +1,7 @@
 import React, { use, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { io } from "socket.io-client";
-import { FiRefreshCw } from "react-icons/fi";
+import { IoCameraReverse } from "react-icons/io5";
 
 //swiper
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -430,12 +430,12 @@ const CreateRoom = () => {
         <SwiperSlide>
           <div className="relative h-screen w-screen overflow-hidden bg-black">
             <div className="w-full mb-5 text-center relative">
-              <h1 className="absolute text-center w-full bg-gray-300 top-2 left-2 text-white text-xl z-10">
+              <h1 className="absolute text-center w-full bg-gray-300 top-2 left-2 text-white text-xl">
                 Room:
                 <span className="font-semibold text-purple-500"> {roomId}</span>
               </h1>
-
-              <div className="relative w-full h-full mt-16">
+            </div>
+              <div className="relative w-full h-full m-auto">
                 <div className="m-auto">
                   <video
                     ref={localVideoRef}
@@ -445,7 +445,7 @@ const CreateRoom = () => {
                   ></video>
                 </div>
               </div>
-            </div>
+            
 
             <div className="flex mt-1">
               <button
@@ -458,12 +458,7 @@ const CreateRoom = () => {
                 Dropdown button
               </button>
 
-              <button
-                onClick={changeCamerainMobile}
-                className="sm:hidden text-white ml-4 bg-blue-300 hover:bg-blue-400"
-              >
-                <FiRefreshCw />
-              </button>
+              
             </div>
 
             <div
@@ -479,6 +474,14 @@ const CreateRoom = () => {
                     className="hidden md:block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
                   >
                     Screen Share
+                  </a>
+                </li>
+                <li>
+                  <a
+                    onClick={changeCamerainMobile}
+                    className="hidden md:block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
+                  >
+                    <IoCameraReverse />
                   </a>
                 </li>
                 <li>
