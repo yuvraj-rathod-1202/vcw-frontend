@@ -208,6 +208,9 @@ const CreateRoom = () => {
       videoElement.srcObject = stream;
       videoElement.autoplay = true;
       videoElement.playsInline = true;
+      const p = document.createElement("p");
+      p.innerHTML = `<span class="text-green-400">${id}</span>`;
+      videoElement.appendChild(p);
       container.appendChild(videoElement);
     });
   };
@@ -335,7 +338,16 @@ const CreateRoom = () => {
     socket.current.emit("sentmessagetoroom", { roomId, message });
     const chatContainer = document.getElementById("chat-container");
     const messageElement = document.createElement("div");
-    messageElement.classList.add("p-2", "rounded-md", "bg-blue-300", "mb-2", "ml-auto", "max-w-sm", "px-1", "text-right");
+    messageElement.classList.add(
+      "p-2",
+      "rounded-md",
+      "bg-blue-300",
+      "mb-2",
+      "ml-auto",
+      "max-w-sm",
+      "px-1",
+      "text-right"
+    );
     messageElement.innerHTML = `<div><span class="font-semibold text-gray-800">you:</span><strong> ${message} </strong></div>`;
     chatContainer.appendChild(messageElement);
     document.getElementById("message").value = "";
@@ -346,7 +358,16 @@ const CreateRoom = () => {
       const { from, message } = data;
       const chatContainer = document.getElementById("chat-container");
       const messageElement = document.createElement("div");
-      messageElement.classList.add("p-2", "rounded-md", "bg-gray-300", "mb-2", "mr-auto", "max-w-sm", "px-1", "text-left");
+      messageElement.classList.add(
+        "p-2",
+        "rounded-md",
+        "bg-gray-300",
+        "mb-2",
+        "mr-auto",
+        "max-w-sm",
+        "px-1",
+        "text-left"
+      );
       messageElement.innerHTML = `<div><span class="font-semibold text-right bg-white text-gray-800">${from}:</span><strong> ${message} </strong></div>`;
       chatContainer.appendChild(messageElement);
     });
@@ -361,37 +382,47 @@ const CreateRoom = () => {
         delete remoteStreams.current[id];
         updateRemoteVideos();
       }
-    })
+    });
   }, []);
 
   const swiperRef = useRef(null);
   const goToChat = () => {
-    if(swiperRef.current){
+    if (swiperRef.current) {
       swiperRef.current.slideTo(1);
     }
-  }
+  };
 
   return (
     <div>
-      <Swiper onSwiper={(swiper) => (swiperRef.current = swiper)} pagination={true} modules={[Pagination, Navigation]} className="mySwiper">
+      <Swiper
+        onSwiper={(swiper) => (swiperRef.current = swiper)}
+        pagination={true}
+        modules={[Pagination, Navigation]}
+        className="mySwiper"
+      >
         <SwiperSlide>
           <div className="relative h-screen w-screen overflow-hidden bg-black">
             <h1 className="absolute mb-3 top-2 left-2 text-white text-xl z-10">
-              Simple Video Call <span className="font-semibold text-purple-500"> {roomId}</span>
+              Simple Video Call{" "}
+              <span className="font-semibold text-purple-500"> {roomId}</span>
             </h1>
 
             <div className="relative w-full h-full">
+              {/* Local Video */}
               <video
                 ref={localVideoRef}
-                className="absolute bottom-14 right-4 w-36 h-36 object-cover rounded-lg border-2 border-white bg-black"
+                className="absolute bottom-4 right-4 w-36 h-36 object-cover rounded-lg border-2 border-white bg-black z-10"
                 autoPlay
                 muted
               ></video>
 
+              {/* Remote Videos */}
               <div
                 id="remote-videos"
                 className="absolute inset-0 flex-wrap grid grid-cols-1 mt-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4 overflow-auto overflow-y-auto"
-              ></div>
+              >
+                {/* Remote video elements will be dynamically inserted here */}
+              </div>
             </div>
 
             <div className="flex">
@@ -429,7 +460,10 @@ const CreateRoom = () => {
                   </a>
                 </li>
                 <li>
-                  <a onClick={goToChat} className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
+                  <a
+                    onClick={goToChat}
+                    className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
+                  >
                     Chat
                   </a>
                 </li>
@@ -445,13 +479,17 @@ const CreateRoom = () => {
             </div>
           </div>
         </SwiperSlide>
+
         <SwiperSlide>
           <div>
             <h1 className="text-xl mb-1 text-center font-medium text-black bg-gray-300">
               Chat with Room
             </h1>
             <hr />
-            <div className="flex flex-col mb-1 h-[calc(100vh-110px)] overflow-y-auto" id="chat-container"></div>
+            <div
+              className="flex flex-col mb-1 h-[calc(100vh-110px)] overflow-y-auto"
+              id="chat-container"
+            ></div>
             <hr />
             <div className="flex flex-row items-center p-4 justify-center space-x-4 bg-neutral-100">
               <input
