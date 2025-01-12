@@ -202,28 +202,39 @@ const CreateRoom = () => {
   const updateRemoteVideos = () => {
     const container = document.getElementById("remote-videos");
     container.innerHTML = "";
-  
+
     Object.entries(remoteStreams.current).forEach(([id, stream]) => {
       const videoContainer = document.createElement("div");
       videoContainer.classList.add("relative");
-  
+
       const videoElement = document.createElement("video");
       videoElement.srcObject = stream;
       videoElement.autoplay = true;
       videoElement.playsInline = true;
-      videoElement.classList.add("w-full", "h-full", "object-cover", "max-h-96", "rounded-lg");
+      videoElement.classList.add(
+        "w-full",
+        "h-full",
+        "object-cover",
+        "max-h-80",
+        "rounded-lg"
+      );
 
       const textElement = document.createElement("p");
       textElement.innerHTML = `<span class="text-green-400">${id}</span>`;
-      textElement.classList.add("absolute", "bottom-4", "left-2", "text-white", "z-10");
-  
+      textElement.classList.add(
+        "absolute",
+        "bottom-4",
+        "left-2",
+        "text-white",
+        "z-10"
+      );
+
       videoContainer.appendChild(videoElement);
       videoContainer.appendChild(textElement);
-  
+
       container.appendChild(videoContainer);
     });
   };
-  
 
   const startScreenShare = async () => {
     try {
@@ -406,7 +417,7 @@ const CreateRoom = () => {
     if (swiperRef.current) {
       swiperRef.current.slideTo(1);
     }
-  }
+  };
 
   return (
     <div>
@@ -418,24 +429,22 @@ const CreateRoom = () => {
       >
         <SwiperSlide>
           <div className="relative h-screen w-screen overflow-hidden bg-black">
-            <div className="w-full mb-5 text-center">
-            <h1 className="absolute text-center w-full bg-gray-300  top-2 left-2 text-white text-xl z-10">
-              Room:
-              <span className="font-semibold text-purple-500"> {roomId}</span>
-            </h1>
-            </div>
+            <div className="w-full mb-5 text-center relative">
+              <h1 className="absolute text-center w-full bg-gray-300 top-2 left-2 text-white text-xl z-10">
+                Room:
+                <span className="font-semibold text-purple-500"> {roomId}</span>
+              </h1>
 
-            <div className="relative w-full h-full mt-4 m-auto">
-              {/* Local Video */}
-              <div className="m-auto">
-              <video
-                ref={localVideoRef}
-                className="absolute w-full max-w-lg h-1/2 object-cover rounded-lg border-2 border-white bg-black z-10"
-                autoPlay
-                muted
-              ></video>
+              <div className="relative w-full h-full mt-16">
+                <div className="m-auto">
+                  <video
+                    ref={localVideoRef}
+                    className="w-full max-w-lg h-1/2 object-cover rounded-lg border-2 border-white bg-black z-0"
+                    autoPlay
+                    muted
+                  ></video>
+                </div>
               </div>
-              
             </div>
 
             <div className="flex mt-1">
@@ -501,19 +510,17 @@ const CreateRoom = () => {
           </div>
         </SwiperSlide>
         <SwiperSlide>
-        <div className="relative h-screen w-screen overflow-hidden bg-black">
-          <h1 className="text-xl mb-1 text-center font-medium text-black bg-gray-300">
-            Room : {roomId}
-          </h1>
-        <div className="relative w-full h-full">
-          <div
+          <div className="relative h-screen w-screen overflow-hidden bg-black">
+            <h1 className="text-xl mb-1 text-center font-medium text-black bg-gray-300">
+              Room : {roomId}
+            </h1>
+            <div className="relative w-full h-full">
+              <div
                 id="remote-videos"
-                className="absolute inset-0 flex-wrap grid grid-cols-1 mt-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4 overflow-auto overflow-y-auto"
-              >
-
+                className="absolute inset-0 flex-wrap grid grid-cols-1 mt-2 sm:grid-cols-2 md:grid-cols-3 grid-rows-2 lg:grid-cols-4 gap-4 p-4 overflow-auto overflow-y-auto"
+              ></div>
+            </div>
           </div>
-        </div>
-        </div>
         </SwiperSlide>
         <SwiperSlide>
           <div>
