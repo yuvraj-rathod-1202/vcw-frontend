@@ -52,7 +52,7 @@ const CreateRoom = () => {
         }
         socket.current.on("user-joined", async (id) => {
           console.log("User joined with ID:", id);
-          showSidebar(id);
+          showSidebar(id, "joined");
           if (peerConnections.current[id]) {
             console.warn(`Peer connection already exists for user: ${id}`);
             return;
@@ -385,9 +385,9 @@ const CreateRoom = () => {
     document.getElementById("message").value = "";
   };
 
-  const showSidebar = (joinedUserId) => {
+  const showSidebar = (joinedUserId, status) => {
     const sidebar = document.getElementById("sidebar");
-    sidebar.innerText = `${joinedUserId} joined the room`;
+    sidebar.innerText = `${joinedUserId} ${status} the room`;
     sidebar.classList.remove("opacity-0", "translate-x-full"); // Ensure it's visible
     setTimeout(() => {
       sidebar.classList.add("opacity-0", "translate-x-full"); // Hide it after 1 second
@@ -419,6 +419,7 @@ const CreateRoom = () => {
       console.log("socket.current is available for user-left");
       socket.current.on("user-left", (id) => {
         console.log("User left:", id);
+        showSidebar(id, "left");
         if (peerConnections.current[id]) {
           console.log("Closing peer connection for:", id);
           peerConnections.current[id].close();
@@ -472,7 +473,7 @@ const CreateRoom = () => {
             // translate-x-full opacity-0
             <div
               id="sidebar"
-              class="fixed bottom-12 right-1 text-xl font-semibold rounded-md shadow-md p-2 bg-orange-200 translate-x-full opacity-0 text-black transform animate-slideInOut"
+              class="fixed bottom-12 right-1 text-sm font-semibold rounded-md shadow-md p-2 bg-orange-200 translate-x-full opacity-0 text-black transform animate-slideInOut"
             >
               
             </div>
