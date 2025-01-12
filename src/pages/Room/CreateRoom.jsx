@@ -40,12 +40,13 @@ const CreateRoom = () => {
       console.error("Room ID is missing!");
       return;
     }
+    socket.current =  getSocket();
 
     const initialize = async () => {
       try {
         await getLocalStream();
 
-        socket.current =  getSocket();
+        
 
         if (joinNotification) {
           joinNotification = false;
