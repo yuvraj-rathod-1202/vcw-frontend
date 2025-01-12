@@ -405,11 +405,13 @@ const CreateRoom = () => {
       chatContainer.appendChild(messageElement);
     });
   }
+  console.log("socket.current", socket.current);
   if(socket.current){
+    console.log("socket.current is available for user-left");
     socket.current.on("user-left", (id) => {
       console.log("User left:", id);
       if(id === socket.current.id){
-        redirect('/');
+        navigate('/');
       }
       if (peerConnections.current[id]) {
         console.log("Closing peer connection for:", id);
@@ -423,7 +425,7 @@ const CreateRoom = () => {
       }
     });
   }
-  }, []);
+  }, [socket.current]);
 
   const swiperRef = useRef(null);
   const goToChat = () => {
