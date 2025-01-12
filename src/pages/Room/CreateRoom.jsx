@@ -1,5 +1,5 @@
 import React, { use, useEffect, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { redirect, useNavigate, useParams } from "react-router-dom";
 import { io } from "socket.io-client";
 import { IoCameraReverse } from "react-icons/io5";
 
@@ -294,8 +294,7 @@ const CreateRoom = () => {
     if (localStream.current) {
       localStream.current.getTracks().forEach((track) => track.stop());
     }
-    socket.current.emit("leave-room", { roomId, userId: socket.current.id });
-    navigate("/"); // Redirect user to another page
+    socket.current.emit("leave-room", roomId);
   };
 
   let usingFrontCamera = true; // Tracks the current camera state
@@ -409,6 +408,9 @@ const CreateRoom = () => {
   if(socket.current){
     socket.current.on("user-left", (id) => {
       console.log("User left:", id);
+      if(id === socket.current.id){
+        redirect('/');
+      }
       if (peerConnections.current[id]) {
         console.log("Closing peer connection for:", id);
         peerConnections.current[id].close();
