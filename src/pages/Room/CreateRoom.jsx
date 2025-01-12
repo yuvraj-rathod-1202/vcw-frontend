@@ -427,7 +427,7 @@ const CreateRoom = () => {
               {/* Local Video */}
               <video
                 ref={localVideoRef}
-                className="absolute bottom-4 right-4 w-36 h-36 object-cover rounded-lg border-2 border-white bg-black z-10"
+                className="absolute top-auto left-auto bottom-auto right-auto w-48 h-48 object-cover rounded-lg border-2 border-white bg-black z-10"
                 autoPlay
                 muted
               ></video>
@@ -498,12 +498,17 @@ const CreateRoom = () => {
           </div>
         </SwiperSlide>
         <SwiperSlide>
+          <h1 className="text-xl mb-1 text-center font-medium text-black bg-gray-300">
+            Room : {roomId}
+          </h1>
+        <div className="relative w-full h-full">
           <div
                 id="remote-videos"
                 className="absolute inset-0 flex-wrap grid grid-cols-1 mt-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4 overflow-auto overflow-y-auto"
               >
-                {/* Remote video elements will be dynamically inserted here */}
+
           </div>
+        </div>
         </SwiperSlide>
         <SwiperSlide>
           <div>
