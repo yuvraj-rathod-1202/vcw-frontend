@@ -40,13 +40,11 @@ const CreateRoom = () => {
       console.error("Room ID is missing!");
       return;
     }
-    socket.current =  getSocket();
+    socket.current = getSocket();
 
     const initialize = async () => {
       try {
         await getLocalStream();
-
-        
 
         if (joinNotification) {
           joinNotification = false;
@@ -54,6 +52,7 @@ const CreateRoom = () => {
         }
         socket.current.on("user-joined", async (id) => {
           console.log("User joined with ID:", id);
+          showSidebar(id);
           if (peerConnections.current[id]) {
             console.warn(`Peer connection already exists for user: ${id}`);
             return;
@@ -204,10 +203,9 @@ const CreateRoom = () => {
         localStream.current.getTracks().forEach((track) => {
           peerConnections.current[id].addTrack(track, localStream.current);
         });
-      }else{
-      console.error("Local stream is not initialized yet!");
-        }
-
+      } else {
+        console.error("Local stream is not initialized yet!");
+      }
     }
   };
 
@@ -387,43 +385,52 @@ const CreateRoom = () => {
     document.getElementById("message").value = "";
   };
 
+  const showSidebar = (joinedUserId) => {
+    const sidebar = document.getElementById("sidebar");
+    sidebar.innerText = `${joinedUserId} joined the room`;
+    sidebar.classList.remove("opacity-0", "translate-x-full"); // Ensure it's visible
+    setTimeout(() => {
+      sidebar.classList.add("opacity-0", "translate-x-full"); // Hide it after 1 second
+    }, 1500); // Animation + delay
+  };
+
   useEffect(() => {
-    if(socket.current){
-    socket.current.on("getmessagefromroom", (data) => {
-      const { from, message } = data;
-      const chatContainer = document.getElementById("chat-container");
-      const messageElement = document.createElement("div");
-      messageElement.classList.add(
-        "p-2",
-        "rounded-md",
-        "bg-gray-300",
-        "mb-2",
-        "mr-auto",
-        "max-w-sm",
-        "px-1",
-        "text-left"
-      );
-      messageElement.innerHTML = `<div><span class="font-semibold text-right bg-white text-gray-800">${from}:</span><strong> ${message} </strong></div>`;
-      chatContainer.appendChild(messageElement);
-    });
-  }
-  console.log("socket.current", socket.current);
-  if(socket.current){
-    console.log("socket.current is available for user-left");
-    socket.current.on("user-left", (id) => {
-      console.log("User left:", id);
-      if (peerConnections.current[id]) {
-        console.log("Closing peer connection for:", id);
-        peerConnections.current[id].close();
-        delete peerConnections.current[id];
-      }
-      if (remoteStreams.current[id]) {
-        console.log("Removing remote stream for:", id);
-        delete remoteStreams.current[id];
-        updateRemoteVideos();
-      }
-    });
-  }
+    if (socket.current) {
+      socket.current.on("getmessagefromroom", (data) => {
+        const { from, message } = data;
+        const chatContainer = document.getElementById("chat-container");
+        const messageElement = document.createElement("div");
+        messageElement.classList.add(
+          "p-2",
+          "rounded-md",
+          "bg-gray-300",
+          "mb-2",
+          "mr-auto",
+          "max-w-sm",
+          "px-1",
+          "text-left"
+        );
+        messageElement.innerHTML = `<div><span class="font-semibold text-right bg-white text-gray-800">${from}:</span><strong> ${message} </strong></div>`;
+        chatContainer.appendChild(messageElement);
+      });
+    }
+    console.log("socket.current", socket.current);
+    if (socket.current) {
+      console.log("socket.current is available for user-left");
+      socket.current.on("user-left", (id) => {
+        console.log("User left:", id);
+        if (peerConnections.current[id]) {
+          console.log("Closing peer connection for:", id);
+          peerConnections.current[id].close();
+          delete peerConnections.current[id];
+        }
+        if (remoteStreams.current[id]) {
+          console.log("Removing remote stream for:", id);
+          delete remoteStreams.current[id];
+          updateRemoteVideos();
+        }
+      });
+    }
   }, [socket.current]);
 
   const swiperRef = useRef(null);
@@ -448,25 +455,27 @@ const CreateRoom = () => {
         className="mySwiper"
       >
         <SwiperSlide>
-
           <div className="relative h-screen w-screen overflow-hidden bg-black">
             <h1 className="text-xl mb-1 text-center font-medium text-black bg-gray-300">
               Room : {roomId}
             </h1>
             <div className="relative w-full h-full m-auto">
-                <div className="m-auto">
-                  <video
-                    ref={localVideoRef}
-                    className="w-full max-w-lg h-1/2 object-cover rounded-lg border-2 border-white bg-black z-0"
-                    autoPlay
-                    muted
-                  ></video>
-                </div>
+              <div className="m-auto">
+                <video
+                  ref={localVideoRef}
+                  className="w-full max-w-lg h-1/2 object-cover rounded-lg border-2 border-white bg-black z-0"
+                  autoPlay
+                  muted
+                ></video>
               </div>
-          
-
+            </div>
+            // translate-x-full opacity-0
+            <div
+              id="sidebar"
+              class="fixed bottom-12 right-1 text-xl font-semibold rounded-md shadow-md p-2 bg-orange-200 translate-x-full opacity-0 text-black transform animate-slideInOut"
+            >
               
-            
+            </div>
 
             <div className="flex mt-1">
               <button
@@ -478,8 +487,6 @@ const CreateRoom = () => {
               >
                 Dropdown button
               </button>
-
-              
             </div>
 
             <div
