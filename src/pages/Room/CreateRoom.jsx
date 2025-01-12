@@ -417,15 +417,15 @@ const CreateRoom = () => {
         className="mySwiper"
       >
         <SwiperSlide>
-          <div className="relative h-screen w-screen max-w-sm overflow-hidden bg-black">
-            <div className="w-full mb-3 text-center">
+          <div className="relative h-screen w-screen overflow-hidden bg-black">
+            <div className="w-full mb-5 text-center">
             <h1 className="absolute text-center w-full bg-gray-300  top-2 left-2 text-white text-xl z-10">
               Room:
               <span className="font-semibold text-purple-500"> {roomId}</span>
             </h1>
             </div>
 
-            <div className="relative w-full h-full">
+            <div className="relative w-full h-full mt-1">
               {/* Local Video */}
               <div className="m-auto">
               <video
@@ -438,7 +438,7 @@ const CreateRoom = () => {
               
             </div>
 
-            <div className="flex">
+            <div className="flex mt-1">
               <button
                 id="dropdownDefaultButton"
                 onClick={toggleDropdown}
