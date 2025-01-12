@@ -296,6 +296,7 @@ const CreateRoom = () => {
       localStream.current.getTracks().forEach((track) => track.stop());
     }
     socket.current.emit("leave-room", roomId);
+    navigate("/");
   };
 
   let usingFrontCamera = true; // Tracks the current camera state
@@ -411,9 +412,6 @@ const CreateRoom = () => {
     console.log("socket.current is available for user-left");
     socket.current.on("user-left", (id) => {
       console.log("User left:", id);
-      if(id === socket.current.id){
-        navigate('/');
-      }
       if (peerConnections.current[id]) {
         console.log("Closing peer connection for:", id);
         peerConnections.current[id].close();
