@@ -245,6 +245,7 @@ const CreateRoom = () => {
 
       container.appendChild(videoContainer);
     });
+    console.log("Remote videos updated:");
   };
 
   const startScreenShare = async () => {
@@ -405,19 +406,21 @@ const CreateRoom = () => {
       chatContainer.appendChild(messageElement);
     });
   }
-if(socket.current){
+
     socket.current.on("user-left", (id) => {
       console.log("User left:", id);
       if (peerConnections.current[id]) {
+        console.log("Closing peer connection for:", id);
         peerConnections.current[id].close();
         delete peerConnections.current[id];
       }
       if (remoteStreams.current[id]) {
+        console.log("Removing remote stream for:", id);
         delete remoteStreams.current[id];
         updateRemoteVideos();
       }
     });
-  }
+  
   }, []);
 
   const swiperRef = useRef(null);
