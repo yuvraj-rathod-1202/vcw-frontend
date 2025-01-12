@@ -211,7 +211,7 @@ const CreateRoom = () => {
       videoElement.srcObject = stream;
       videoElement.autoplay = true;
       videoElement.playsInline = true;
-      videoElement.classList.add("w-full", "h-full", "object-cover");
+      videoElement.classList.add("w-full", "h-full", "object-cover", "max-h-96", "rounded-lg");
 
       const textElement = document.createElement("p");
       textElement.innerHTML = `<span class="text-green-400">${id}</span>`;
@@ -425,12 +425,12 @@ const CreateRoom = () => {
             </h1>
             </div>
 
-            <div className="relative w-full h-full mt-1">
+            <div className="relative w-full h-full mt-4 m-auto">
               {/* Local Video */}
               <div className="m-auto">
               <video
                 ref={localVideoRef}
-                className="absolute w-full max-w-md h-1/2 object-cover rounded-lg border-2 border-white bg-black z-10"
+                className="absolute w-full max-w-lg h-1/2 object-cover rounded-lg border-2 border-white bg-black z-10"
                 autoPlay
                 muted
               ></video>
