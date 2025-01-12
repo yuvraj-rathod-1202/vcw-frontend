@@ -215,7 +215,7 @@ const CreateRoom = () => {
 
       const textElement = document.createElement("p");
       textElement.innerHTML = `<span class="text-green-400">${id}</span>`;
-      textElement.classList.add("absolute", "bottom-2", "left-2", "text-white", "z-10");
+      textElement.classList.add("absolute", "bottom-4", "left-2", "text-white", "z-10");
   
       videoContainer.appendChild(videoElement);
       videoContainer.appendChild(textElement);
@@ -418,20 +418,23 @@ const CreateRoom = () => {
       >
         <SwiperSlide>
           <div className="relative h-screen w-screen max-w-sm overflow-hidden bg-black">
-            <h1 className="absolute text-center bg-gray-300 mb-3 top-2 left-2 text-white text-xl z-10">
+            <div className="w-full mb-3 text-center">
+            <h1 className="absolute text-center w-full bg-gray-300  top-2 left-2 text-white text-xl z-10">
               Room:
               <span className="font-semibold text-purple-500"> {roomId}</span>
             </h1>
+            </div>
 
             <div className="relative w-full h-full">
               {/* Local Video */}
+              <div className="m-auto">
               <video
                 ref={localVideoRef}
-                className="absolute m-auto w-full h-1/2 object-cover rounded-lg border-2 border-white bg-black z-10"
+                className="absolute w-full max-w-md h-1/2 object-cover rounded-lg border-2 border-white bg-black z-10"
                 autoPlay
                 muted
               ></video>
-
+              </div>
               
             </div>
 
