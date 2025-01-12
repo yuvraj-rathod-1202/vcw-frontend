@@ -398,9 +398,15 @@ const CreateRoom = () => {
   const swiperRef = useRef(null);
   const goToChat = () => {
     if (swiperRef.current) {
-      swiperRef.current.slideTo(1);
+      swiperRef.current.slideTo(2);
     }
   };
+
+  const swipeToJoinedUsers = () => {
+    if (swiperRef.current) {
+      swiperRef.current.slideTo(1);
+    }
+  }
 
   return (
     <div>
@@ -426,13 +432,7 @@ const CreateRoom = () => {
                 muted
               ></video>
 
-              {/* Remote Videos */}
-              <div
-                id="remote-videos"
-                className="absolute inset-0 flex-wrap grid grid-cols-1 mt-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4 overflow-auto overflow-y-auto"
-              >
-                {/* Remote video elements will be dynamically inserted here */}
-              </div>
+              
             </div>
 
             <div className="flex">
@@ -471,6 +471,14 @@ const CreateRoom = () => {
                 </li>
                 <li>
                   <a
+                    onClick={swipeToJoinedUsers}
+                    className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
+                  >
+                    Joined Users
+                  </a>
+                </li>
+                <li>
+                  <a
                     onClick={goToChat}
                     className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
                   >
@@ -489,7 +497,14 @@ const CreateRoom = () => {
             </div>
           </div>
         </SwiperSlide>
-
+        <SwiperSlide>
+          <div
+                id="remote-videos"
+                className="absolute inset-0 flex-wrap grid grid-cols-1 mt-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4 overflow-auto overflow-y-auto"
+              >
+                {/* Remote video elements will be dynamically inserted here */}
+          </div>
+        </SwiperSlide>
         <SwiperSlide>
           <div>
             <h1 className="text-xl mb-1 text-center font-medium text-black bg-gray-300">
