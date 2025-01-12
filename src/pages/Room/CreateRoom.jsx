@@ -45,7 +45,7 @@ const CreateRoom = () => {
       try {
         await getLocalStream();
 
-        socket.current = getSocket();
+        socket.current = await getSocket();
 
         if (joinNotification) {
           joinNotification = false;
