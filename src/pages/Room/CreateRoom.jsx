@@ -427,7 +427,7 @@ const CreateRoom = () => {
               {/* Local Video */}
               <video
                 ref={localVideoRef}
-                className="absolute top-auto left-auto bottom-auto right-auto w-48 h-48 object-cover rounded-lg border-2 border-white bg-black z-10"
+                className="absolute m-auto w-full h-1/2 object-cover rounded-lg border-2 border-white bg-black z-10"
                 autoPlay
                 muted
               ></video>
@@ -498,6 +498,7 @@ const CreateRoom = () => {
           </div>
         </SwiperSlide>
         <SwiperSlide>
+        <div className="relative h-screen w-screen overflow-hidden bg-black">
           <h1 className="text-xl mb-1 text-center font-medium text-black bg-gray-300">
             Room : {roomId}
           </h1>
@@ -508,6 +509,7 @@ const CreateRoom = () => {
               >
 
           </div>
+        </div>
         </div>
         </SwiperSlide>
         <SwiperSlide>
