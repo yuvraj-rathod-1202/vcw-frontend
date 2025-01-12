@@ -201,19 +201,29 @@ const CreateRoom = () => {
 
   const updateRemoteVideos = () => {
     const container = document.getElementById("remote-videos");
-    container.innerHTML = ""; // Clear existing videos
-
+    container.innerHTML = "";
+  
     Object.entries(remoteStreams.current).forEach(([id, stream]) => {
+      const videoContainer = document.createElement("div");
+      videoContainer.classList.add("relative");
+  
       const videoElement = document.createElement("video");
       videoElement.srcObject = stream;
       videoElement.autoplay = true;
       videoElement.playsInline = true;
-      const p = document.createElement("p");
-      p.innerHTML = `<span class="text-green-400">${id}</span>`;
-      videoElement.appendChild(p);
-      container.appendChild(videoElement);
+      videoElement.classList.add("w-full", "h-full", "object-cover");
+
+      const textElement = document.createElement("p");
+      textElement.innerHTML = `<span class="text-green-400">${id}</span>`;
+      textElement.classList.add("absolute", "bottom-2", "left-2", "text-white", "z-10");
+  
+      videoContainer.appendChild(videoElement);
+      videoContainer.appendChild(textElement);
+  
+      container.appendChild(videoContainer);
     });
   };
+  
 
   const startScreenShare = async () => {
     try {
