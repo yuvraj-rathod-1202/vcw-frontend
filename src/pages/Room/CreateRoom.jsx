@@ -406,7 +406,7 @@ const CreateRoom = () => {
       chatContainer.appendChild(messageElement);
     });
   }
-
+  if(socket.current){
     socket.current.on("user-left", (id) => {
       console.log("User left:", id);
       if (peerConnections.current[id]) {
@@ -420,7 +420,7 @@ const CreateRoom = () => {
         updateRemoteVideos();
       }
     });
-  
+  }
   }, []);
 
   const swiperRef = useRef(null);
