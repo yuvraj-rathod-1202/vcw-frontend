@@ -404,7 +404,8 @@ const CreateRoom = () => {
       messageElement.innerHTML = `<div><span class="font-semibold text-right bg-white text-gray-800">${from}:</span><strong> ${message} </strong></div>`;
       chatContainer.appendChild(messageElement);
     });
-
+  }
+if(socket.current){
     socket.current.on("user-left", (id) => {
       console.log("User left:", id);
       if (peerConnections.current[id]) {
@@ -441,14 +442,12 @@ const CreateRoom = () => {
         className="mySwiper"
       >
         <SwiperSlide>
+
           <div className="relative h-screen w-screen overflow-hidden bg-black">
-            <div className="w-full mb-5 text-center relative">
-              <h1 className="absolute text-center w-full bg-gray-300 top-2 left-2 text-white text-xl">
-                Room:
-                <span className="font-semibold text-purple-500"> {roomId}</span>
-              </h1>
-            </div>
-              <div className="relative w-full h-full m-auto">
+            <h1 className="text-xl mb-1 text-center font-medium text-black bg-gray-300">
+              Room : {roomId}
+            </h1>
+            <div className="relative w-full h-full m-auto">
                 <div className="m-auto">
                   <video
                     ref={localVideoRef}
@@ -458,6 +457,9 @@ const CreateRoom = () => {
                   ></video>
                 </div>
               </div>
+          
+
+              
             
 
             <div className="flex mt-1">
