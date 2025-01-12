@@ -417,9 +417,9 @@ const CreateRoom = () => {
         className="mySwiper"
       >
         <SwiperSlide>
-          <div className="relative h-screen w-screen overflow-hidden bg-black">
-            <h1 className="absolute mb-3 top-2 left-2 text-white text-xl z-10">
-              Simple Video Call{" "}
+          <div className="relative h-screen w-screen max-w-sm overflow-hidden bg-black">
+            <h1 className="absolute text-center bg-gray-300 mb-3 top-2 left-2 text-white text-xl z-10">
+              Room:
               <span className="font-semibold text-purple-500"> {roomId}</span>
             </h1>
 
