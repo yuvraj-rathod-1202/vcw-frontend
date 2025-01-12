@@ -43,7 +43,7 @@ const CreateRoom = () => {
 
     const initialize = async () => {
       try {
-        getLocalStream();
+        await getLocalStream();
 
         socket.current = getSocket();
 
@@ -479,7 +479,7 @@ const CreateRoom = () => {
                 <li>
                   <a
                     onClick={changeCamerainMobile}
-                    className="hidden md:block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
+                    className="block md:hidden px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
                   >
                     <IoCameraReverse />
                   </a>
